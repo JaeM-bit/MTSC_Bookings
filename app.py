@@ -336,38 +336,11 @@ def main() -> None:
             unsafe_allow_html=True,
         )
 
-    st.subheader("Workbook")
-    st.caption(
-        "The mirrored 2026 workbook loads automatically. Upload another workbook "
-        "below for temporary analysis; neither file is changed by the portal."
-    )
-
-    uploaded_file = st.file_uploader(
-        "Upload or replace booking workbook",
-        type=["xlsx", "xlsm"],
-        help="The workbook is read in memory and is never changed or overwritten.",
-    )
-
-    if uploaded_file is not None:
-        file_bytes = uploaded_file.getvalue()
-        workbook_label = uploaded_file.name
-    elif DEFAULT_WORKBOOK.is_file():
-        file_bytes = DEFAULT_WORKBOOK.read_bytes()
-        workbook_label = DEFAULT_WORKBOOK.name
-    else:
-        st.info("Choose an Excel file to open the dashboard.")
-        st.caption(
-            "To load it automatically, copy `2026 Booking Info.xlsx` into this "
-            "project folder and restart the portal."
-        )
-        with st.expander("Expected workbook columns"):
-            st.write(
-                "The portal works best with columns for court, booking category, "
-                "booking date, time of booking, booking type and membership status."
-            )
+    if not DEFAULT_WORKBOOK.is_file():
+        st.error("The booking workbook is unavailable. Contact the portal administrator.")
         return
 
-    st.info(f"Workbook in use: {workbook_label}", icon="📘")
+    file_bytes = DEFAULT_WORKBOOK.read_bytes()
     try:
         sheets = workbook_sheets(file_bytes)
     except Exception as exc:
