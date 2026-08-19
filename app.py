@@ -259,20 +259,6 @@ def duration_minutes(value: object) -> float:
     return numeric * 24 * 60 if 0 <= numeric < 1 else numeric
 
 
-def mapping_select(
-    label: str, columns: list[str], suggested: str | None, key: str
-) -> str | None:
-    options: list[str | None] = [None, *columns]
-    index = options.index(suggested) if suggested in options else 0
-    return st.selectbox(
-        label,
-        options,
-        index=index,
-        format_func=lambda value: "Not available" if value is None else value,
-        key=key,
-    )
-
-
 def safe_options(series: pd.Series) -> list[str]:
     return sorted(series.dropna().astype(str).unique().tolist(), key=str.casefold)
 
@@ -377,8 +363,7 @@ def main() -> None:
         with st.expander("Expected workbook columns"):
             st.write(
                 "The portal works best with columns for court, booking category, "
-                "booking date, start time and end time. You can map differently "
-                "named columns after upload."
+                "booking date, time of booking, booking type and membership status."
             )
         return
 
@@ -389,11 +374,8 @@ def main() -> None:
         st.error(f"The workbook could not be opened: {exc}")
         return
 
-    setup_one, setup_two = st.columns([3, 1])
-    with setup_one:
-        sheet_name = st.selectbox("Worksheet", sheets)
-    with setup_two:
-        header_row = st.number_input("Header row", min_value=1, value=1, step=1)
+    sheet_name = sheets[0]
+    header_row = 1
 
     try:
         raw = read_sheet(file_bytes, sheet_name, int(header_row))
@@ -406,19 +388,10 @@ def main() -> None:
         return
 
     columns = raw.columns.tolist()
-    with st.expander("Column mapping", expanded=False):
-        st.caption("Check these choices if your workbook uses unusual column names.")
-        mapping_columns = st.columns(3)
-        mappings: dict[str, str | None] = {}
-        for index, logical_name in enumerate(COLUMN_ALIASES):
-            container = mapping_columns[index % len(mapping_columns)]
-            with container:
-                mappings[logical_name] = mapping_select(
-                    logical_name,
-                    columns,
-                    guess_column(columns, logical_name),
-                    f"mapping_{logical_name}_{sheet_name}",
-                )
+    mappings = {
+        logical_name: guess_column(columns, logical_name)
+        for logical_name in COLUMN_ALIASES
+    }
 
     court_column = mappings["Court"]
     category_column = mappings["Category"]
@@ -430,7 +403,7 @@ def main() -> None:
     membership_status_column = mappings["Membership status"]
 
     if date_column is None:
-        st.warning("Select a Date column in Column mapping to enable date and weekday analysis.")
+        st.warning("A Date column was not found, so date analysis is unavailable.")
 
     working = raw.copy()
     working["__date"] = (
