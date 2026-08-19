@@ -298,14 +298,6 @@ def render_booking_chart(values: pd.Series, category_title: str) -> None:
         axis=alt.Axis(minExtent=42),
     )
     base = alt.Chart(chart_data).encode(x=x_encoding, y=y_encoding)
-    shadow = base.mark_bar(
-        color="#2f618d",
-        opacity=0.28,
-        xOffset=4,
-        yOffset=4,
-        cornerRadiusTopLeft=6,
-        cornerRadiusTopRight=6,
-    )
     raised_bars = base.mark_bar(
         color=alt.Gradient(
             gradient="linear",
@@ -329,11 +321,7 @@ def render_booking_chart(values: pd.Series, category_title: str) -> None:
                 alt.Tooltip("Bookings:Q", format=",d"),
         ]
     )
-    chart = (
-        (shadow + raised_bars)
-        .properties(height=320)
-        .configure_view(strokeWidth=0)
-    )
+    chart = raised_bars.properties(height=320).configure_view(strokeWidth=0)
     st.altair_chart(chart, width="stretch")
 
 
