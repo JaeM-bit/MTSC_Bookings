@@ -280,32 +280,57 @@ def bookings_by_court(
 
 def render_booking_chart(values: pd.Series, category_title: str) -> None:
     chart_data = values.rename_axis(category_title).reset_index(name="Bookings")
-    chart = (
-        alt.Chart(chart_data)
-        .mark_bar(color="#2f6fae", cornerRadiusTopLeft=4, cornerRadiusTopRight=4)
-        .encode(
-            x=alt.X(
-                f"{category_title}:N",
-                sort=None,
-                title=None,
-                axis=alt.Axis(
-                    values=chart_data[category_title].tolist(),
-                    labelAngle=-35,
-                    labelLimit=180,
-                    labelOverlap=False,
-                ),
-            ),
-            y=alt.Y(
-                "Bookings:Q",
-                title="Bookings",
-                scale=alt.Scale(domainMin=0, zero=True, nice=True),
-                axis=alt.Axis(minExtent=42),
-            ),
-            tooltip=[
+    x_encoding = alt.X(
+        f"{category_title}:N",
+        sort=None,
+        title=None,
+        axis=alt.Axis(
+            values=chart_data[category_title].tolist(),
+            labelAngle=-35,
+            labelLimit=180,
+            labelOverlap=False,
+        ),
+    )
+    y_encoding = alt.Y(
+        "Bookings:Q",
+        title="Bookings",
+        scale=alt.Scale(domainMin=0, zero=True, nice=True),
+        axis=alt.Axis(minExtent=42),
+    )
+    base = alt.Chart(chart_data).encode(x=x_encoding, y=y_encoding)
+    shadow = base.mark_bar(
+        color="#2f618d",
+        opacity=0.28,
+        xOffset=4,
+        yOffset=4,
+        cornerRadiusTopLeft=6,
+        cornerRadiusTopRight=6,
+    )
+    raised_bars = base.mark_bar(
+        color=alt.Gradient(
+            gradient="linear",
+            stops=[
+                alt.GradientStop(color="#4f8fc6", offset=0),
+                alt.GradientStop(color="#78b4df", offset=0.55),
+                alt.GradientStop(color="#9bcdef", offset=1),
+            ],
+            x1=0,
+            x2=0,
+            y1=1,
+            y2=0,
+        ),
+        stroke="#d8ecfb",
+        strokeWidth=1.2,
+        cornerRadiusTopLeft=6,
+        cornerRadiusTopRight=6,
+    ).encode(
+        tooltip=[
                 alt.Tooltip(f"{category_title}:N", title=category_title),
                 alt.Tooltip("Bookings:Q", format=",d"),
-            ],
-        )
+        ]
+    )
+    chart = (
+        (shadow + raised_bars)
         .properties(height=320)
         .configure_view(strokeWidth=0)
     )
