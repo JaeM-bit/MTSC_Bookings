@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MTSC Booking Analytics Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=1">
+  <script defer src="app.js?v=1"></script>
+</head>
+<body>
+  <header class="app-header">
+    <a class="brand" href="#dashboard">MTSC Booking Analytics</a>
+    <nav><a href="#dashboard">Dashboard</a><a href="#bookings">Bookings</a></nav>
+  </header>
+
+  <main id="dashboard">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">Milford Tennis &amp; Squash Club</p>
+        <h1>Booking Analytics Portal</h1>
+        <p>Explore court demand, booking categories and weekly usage patterns.</p>
+      </div>
+      <img src="assets/milfordlogo.png" alt="Milford Tennis and Squash Club">
+    </section>
+
+    <p class="status" id="status" aria-live="polite">Loading booking data…</p>
+
+    <section class="kpi-grid" aria-label="Booking summary">
+      <article class="card kpi"><span>Total bookings</span><strong id="totalBookings">0</strong></article>
+      <article class="card kpi"><span>Courts in view</span><strong id="courtCount">0</strong></article>
+      <article class="card kpi"><span>Categories in view</span><strong id="categoryCount">0</strong></article>
+      <article class="card kpi"><span>Total booked hours</span><strong id="bookedHours">0</strong></article>
+    </section>
+
+    <section class="portal-layout">
+      <aside class="card filters" aria-label="Booking filters">
+        <div class="filter-title-row"><h2>Filters</h2><button class="text-button" id="clearFilters" type="button">Clear all</button></div>
+        <label>Search bookings<input id="searchInput" type="search" placeholder="Search any column"></label>
+        <label>Court<select id="courtFilter"><option value="">All courts</option></select></label>
+        <label>Booking category<select id="categoryFilter"><option value="">All categories</option></select></label>
+        <div class="date-pair">
+          <label>From<input id="startDate" type="date"></label>
+          <label>To<input id="endDate" type="date"></label>
+        </div>
+        <label>Day of week<select id="weekdayFilter"><option value="">All days</option></select></label>
+        <label>Time of day<select id="periodFilter"><option value="">All periods</option><option>Morning</option><option>Afternoon</option><option>Evening</option></select></label>
+        <label>Booking type<select id="typeFilter"><option value="">All booking types</option></select></label>
+        <label>Membership status<select id="membershipFilter"><option value="">All membership statuses</option></select></label>
+      </aside>
+
+      <div class="dashboard-content">
+        <section class="chart-grid">
+          <article class="card chart-card"><h2>Bookings by court</h2><div class="bar-chart" id="courtChart"></div></article>
+          <article class="card chart-card"><h2>Bookings by category</h2><div class="bar-chart" id="categoryChart"></div></article>
+        </section>
+        <article class="card chart-card weekday-card"><h2>Bookings by weekday</h2><div class="bar-chart" id="weekdayChart"></div></article>
+
+        <section class="card bookings-panel" id="bookings">
+          <div class="section-head"><div><p class="eyebrow">Booking details</p><h2>Filtered bookings</h2></div><span id="shownCount">0 shown</span></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Court(s)</th><th>Category</th><th>Duration</th><th>Time</th><th>Booking type</th><th>Membership</th></tr></thead>
+              <tbody id="bookingRows"></tbody>
+            </table>
+          </div>
+          <div class="pagination"><button id="previousPage" type="button">Previous</button><span id="pageStatus"></span><button id="nextPage" type="button">Next</button></div>
+        </section>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

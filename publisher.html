@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MTSC Booking Data Publisher</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=1">
+  <script defer src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script defer src="publisher.js?v=1"></script>
+</head>
+<body>
+  <header class="app-header"><a class="brand" href="index.html">MTSC Booking Publisher</a><nav><a href="index.html">View portal</a></nav></header>
+  <main class="publisher-main">
+    <section class="hero compact-hero"><div><p class="eyebrow">Local publishing tool</p><h1>Update Booking Data</h1><p>Select the sanitised booking workbook and download a browser-safe JSON file.</p></div><img src="assets/milfordlogo.png" alt="Milford Tennis and Squash Club"></section>
+    <section class="card publisher-card">
+      <h2>1. Select the sanitised workbook</h2>
+      <label class="file-drop">Choose an Excel file<input id="workbookFile" type="file" accept=".xlsx,.xlsm,.xls"></label>
+      <p id="publisherStatus" class="status" aria-live="polite">No workbook selected.</p>
+      <div class="publisher-summary" id="publisherSummary" hidden></div>
+      <h2>2. Download the portal data</h2>
+      <button class="primary-button" id="downloadJson" type="button" disabled>Download bookings.json</button>
+      <p class="muted">Replace <code>data/bookings.json</code> with the download, then commit and push it using GitHub Desktop.</p>
+    </section>
+  </main>
+</body>
+</html>
