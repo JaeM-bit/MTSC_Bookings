@@ -12,9 +12,10 @@ function weekday(dateValue){const date=new Date(`${dateValue}T12:00:00`);return 
 function period(timeValue){const match=text(timeValue).match(/^(\d{1,2}):(\d{2})/);if(!match)return "";const minutes=Number(match[1])*60+Number(match[2]);return minutes<720?"Morning":minutes<=1020?"Afternoon":"Evening"}
 function number(value){const parsed=Number(value);return Number.isFinite(parsed)?parsed:0}
 function countBy(rows,key,order=[]){const counts=new Map();rows.forEach(row=>{const value=key(row);if(value)counts.set(value,(counts.get(value)||0)+1)});const entries=[...counts.entries()];return order.length?order.filter(item=>counts.has(item)).map(item=>[item,counts.get(item)]):entries.sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],undefined,{numeric:true}))}
-function courtCounts(rows){return Object.entries(courts).map(([label,match])=>[label,rows.filter(row=>normal(row.court).includes(normal(match))).length]).filter(([,count])=>count>0)}
+function courtCounts(rows,selected=[]){return Object.entries(courts).filter(([label])=>!selected.length||selected.includes(label)).map(([label,match])=>[label,rows.filter(row=>normal(row.court).includes(normal(match))).length]).filter(([,count])=>count>0)}
 function selectedCourts(){return [...els.courtOptions.querySelectorAll('input[data-court]:checked')].map(input=>input.value)}
 function updateCourtSummary(){const selected=selectedCourts();els.courtSummary.textContent=!selected.length?"All courts":selected.length===1?selected[0]:`${selected.length} courts selected`}
+function displayedCourts(row,selected){return selected.length?selected.filter(court=>normal(row.court).includes(normal(courts[court]))).join(", "):row.court}
 
 function renderChart(container,entries){if(!entries.length){container.innerHTML='<p class="empty-chart">No data for this selection.</p>';return}const max=Math.max(...entries.map(([,value])=>value),1);container.innerHTML=entries.map(([label,value])=>`<div class="bar-item" title="${escapeHtml(label)}: ${value.toLocaleString()}"><span class="bar-value">${value.toLocaleString()}</span><span class="bar" style="height:${Math.max(2,value/max*100)}%"></span><span class="bar-label">${escapeHtml(label)}</span></div>`).join("")}
 function escapeHtml(value){const node=document.createElement("div");node.textContent=text(value);return node.innerHTML}
@@ -39,15 +40,16 @@ function applyFilters(){
 }
 
 function render(pageTotal){
+  const chosenCourts=selectedCourts();
   els.totalBookings.textContent=state.filtered.length.toLocaleString();
-  const visibleCourts=courtCounts(state.filtered);els.courtCount.textContent=visibleCourts.length.toLocaleString();
+  const visibleCourts=courtCounts(state.filtered,chosenCourts);els.courtCount.textContent=visibleCourts.length.toLocaleString();
   els.categoryCount.textContent=new Set(state.filtered.map(row=>row.category).filter(Boolean)).size.toLocaleString();
   const minutes=state.filtered.reduce((sum,row)=>sum+number(row.duration),0);els.bookedHours.textContent=(minutes/60).toLocaleString(undefined,{maximumFractionDigits:1});
   renderChart(els.courtChart,visibleCourts);
   renderChart(els.categoryChart,countBy(state.filtered,row=>row.category));
   renderChart(els.weekdayChart,countBy(state.filtered,row=>weekday(row.date),weekdays));
   const start=(state.page-1)*state.pageSize;const visible=state.filtered.slice(start,start+state.pageSize);
-  els.bookingRows.innerHTML=visible.length?visible.map(row=>`<tr><td>${escapeHtml(localDate(row.date))}</td><td>${escapeHtml(row.court)}</td><td>${escapeHtml(row.category)}</td><td>${number(row.duration).toLocaleString()} min</td><td>${escapeHtml(row.time)}</td><td>${escapeHtml(row.bookingType)}</td><td>${escapeHtml(row.membershipStatus)}</td></tr>`).join(""):'<tr><td colspan="7">No bookings match these filters.</td></tr>';
+  els.bookingRows.innerHTML=visible.length?visible.map(row=>`<tr><td>${escapeHtml(localDate(row.date))}</td><td>${escapeHtml(displayedCourts(row,chosenCourts))}</td><td>${escapeHtml(row.category)}</td><td>${number(row.duration).toLocaleString()} min</td><td>${escapeHtml(row.time)}</td><td>${escapeHtml(row.bookingType)}</td><td>${escapeHtml(row.membershipStatus)}</td></tr>`).join(""):'<tr><td colspan="7">No bookings match these filters.</td></tr>';
   els.shownCount.textContent=`${state.filtered.length.toLocaleString()} of ${state.rows.length.toLocaleString()} shown`;
   els.pageStatus.textContent=`Page ${state.page} of ${pageTotal}`;els.previousPage.disabled=state.page<=1;els.nextPage.disabled=state.page>=pageTotal;
 }
