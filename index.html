@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=1">
-  <script defer src="app.js?v=1"></script>
+  <script defer src="app.js?v=2"></script>
 </head>
 <body>
   <header class="app-header">
@@ -39,7 +39,13 @@
       <aside class="card filters" aria-label="Booking filters">
         <div class="filter-title-row"><h2>Filters</h2><button class="text-button" id="clearFilters" type="button">Clear all</button></div>
         <label>Search bookings<input id="searchInput" type="search" placeholder="Search any column"></label>
-        <label>Court<select id="courtFilter"><option value="">All courts</option></select></label>
+        <div class="court-filter">
+          <span class="filter-label">Court</span>
+          <details class="multi-select" id="courtMenu">
+            <summary id="courtSummary">All courts</summary>
+            <div class="multi-select-options" id="courtOptions"></div>
+          </details>
+        </div>
         <label>Booking category<select id="categoryFilter"><option value="">All categories</option></select></label>
         <div class="date-pair">
           <label>From<input id="startDate" type="date"></label>

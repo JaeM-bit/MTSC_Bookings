@@ -1,7 +1,7 @@
 const state={rows:[],filtered:[],page:1,pageSize:50};
 const weekdays=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 const courts={"Court 1":"Court 1 - Astro","Court 2":"Court 2 - Astro","Court 3":"Court 3 - Astro","Court 4":"Court 4 - Clay","Court 5":"Court 5 - Astro","Court 6":"Court 6 - Astro","Court 7":"Court 7 - Clay","Ball Machine":"Ball Machine","Table Tennis":"Table Tennis Table"};
-const els=Object.fromEntries(["status","totalBookings","courtCount","categoryCount","bookedHours","searchInput","courtFilter","categoryFilter","startDate","endDate","weekdayFilter","periodFilter","typeFilter","membershipFilter","clearFilters","courtChart","categoryChart","weekdayChart","shownCount","bookingRows","previousPage","nextPage","pageStatus"].map(id=>[id,document.getElementById(id)]));
+const els=Object.fromEntries(["status","totalBookings","courtCount","categoryCount","bookedHours","searchInput","courtMenu","courtSummary","courtOptions","categoryFilter","startDate","endDate","weekdayFilter","periodFilter","typeFilter","membershipFilter","clearFilters","courtChart","categoryChart","weekdayChart","shownCount","bookingRows","previousPage","nextPage","pageStatus"].map(id=>[id,document.getElementById(id)]));
 
 function text(value){return String(value??"").trim()}
 function normal(value){return text(value).toLocaleLowerCase()}
@@ -13,15 +13,18 @@ function period(timeValue){const match=text(timeValue).match(/^(\d{1,2}):(\d{2})
 function number(value){const parsed=Number(value);return Number.isFinite(parsed)?parsed:0}
 function countBy(rows,key,order=[]){const counts=new Map();rows.forEach(row=>{const value=key(row);if(value)counts.set(value,(counts.get(value)||0)+1)});const entries=[...counts.entries()];return order.length?order.filter(item=>counts.has(item)).map(item=>[item,counts.get(item)]):entries.sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],undefined,{numeric:true}))}
 function courtCounts(rows){return Object.entries(courts).map(([label,match])=>[label,rows.filter(row=>normal(row.court).includes(normal(match))).length]).filter(([,count])=>count>0)}
+function selectedCourts(){return [...els.courtOptions.querySelectorAll('input[data-court]:checked')].map(input=>input.value)}
+function updateCourtSummary(){const selected=selectedCourts();els.courtSummary.textContent=!selected.length?"All courts":selected.length===1?selected[0]:`${selected.length} courts selected`}
 
 function renderChart(container,entries){if(!entries.length){container.innerHTML='<p class="empty-chart">No data for this selection.</p>';return}const max=Math.max(...entries.map(([,value])=>value),1);container.innerHTML=entries.map(([label,value])=>`<div class="bar-item" title="${escapeHtml(label)}: ${value.toLocaleString()}"><span class="bar-value">${value.toLocaleString()}</span><span class="bar" style="height:${Math.max(2,value/max*100)}%"></span><span class="bar-label">${escapeHtml(label)}</span></div>`).join("")}
 function escapeHtml(value){const node=document.createElement("div");node.textContent=text(value);return node.innerHTML}
 
 function applyFilters(){
   const query=normal(els.searchInput.value);
+  const chosenCourts=selectedCourts();
   state.filtered=state.rows.filter(row=>{
     if(query&&!normal(Object.values(row).join(" ")).includes(query))return false;
-    if(els.courtFilter.value!==""&&!normal(row.court).includes(normal(courts[els.courtFilter.value])))return false;
+    if(chosenCourts.length&&!chosenCourts.some(court=>normal(row.court).includes(normal(courts[court]))))return false;
     if(els.categoryFilter.value!==""&&row.category!==els.categoryFilter.value)return false;
     if(els.startDate.value&&row.date<els.startDate.value)return false;
     if(els.endDate.value&&row.date>els.endDate.value)return false;
@@ -50,13 +53,15 @@ function render(pageTotal){
 }
 
 function configureFilters(){
-  addOptions(els.courtFilter,Object.keys(courts));addOptions(els.categoryFilter,unique("category"));addOptions(els.typeFilter,unique("bookingType"));addOptions(els.membershipFilter,unique("membershipStatus"));addOptions(els.weekdayFilter,weekdays);
+  els.courtOptions.innerHTML=`<label><input type="checkbox" data-all-courts checked> All courts</label>${Object.keys(courts).map(court=>`<label><input type="checkbox" data-court value="${court}"> ${court}</label>`).join("")}`;
+  addOptions(els.categoryFilter,unique("category"));addOptions(els.typeFilter,unique("bookingType"));addOptions(els.membershipFilter,unique("membershipStatus"));addOptions(els.weekdayFilter,weekdays);
   const dates=state.rows.map(row=>row.date).filter(Boolean).sort();if(dates.length){els.startDate.min=dates[0];els.startDate.max=dates.at(-1);els.endDate.min=dates[0];els.endDate.max=dates.at(-1)}
 }
 
 function bindEvents(){
-  [els.searchInput,els.courtFilter,els.categoryFilter,els.startDate,els.endDate,els.weekdayFilter,els.periodFilter,els.typeFilter,els.membershipFilter].forEach(control=>control.addEventListener(control.tagName==="INPUT"?"input":"change",()=>{state.page=1;applyFilters()}));
-  els.clearFilters.addEventListener("click",()=>{[els.searchInput,els.courtFilter,els.categoryFilter,els.startDate,els.endDate,els.weekdayFilter,els.periodFilter,els.typeFilter,els.membershipFilter].forEach(control=>control.value="");state.page=1;applyFilters()});
+  [els.searchInput,els.categoryFilter,els.startDate,els.endDate,els.weekdayFilter,els.periodFilter,els.typeFilter,els.membershipFilter].forEach(control=>control.addEventListener(control.tagName==="INPUT"?"input":"change",()=>{state.page=1;applyFilters()}));
+  els.courtOptions.addEventListener("change",event=>{const all=els.courtOptions.querySelector("[data-all-courts]");const choices=[...els.courtOptions.querySelectorAll("[data-court]")];if(event.target===all){all.checked=true;choices.forEach(choice=>choice.checked=false)}if(event.target.matches("[data-court]")){all.checked=false;if(!choices.some(choice=>choice.checked))all.checked=true}updateCourtSummary();state.page=1;applyFilters()});
+  els.clearFilters.addEventListener("click",()=>{[els.searchInput,els.categoryFilter,els.startDate,els.endDate,els.weekdayFilter,els.periodFilter,els.typeFilter,els.membershipFilter].forEach(control=>control.value="");els.courtOptions.querySelector("[data-all-courts]").checked=true;els.courtOptions.querySelectorAll("[data-court]").forEach(choice=>choice.checked=false);updateCourtSummary();state.page=1;applyFilters()});
   els.previousPage.addEventListener("click",()=>{if(state.page>1){state.page-=1;applyFilters();document.getElementById("bookings").scrollIntoView()}});
   els.nextPage.addEventListener("click",()=>{if(state.page*state.pageSize<state.filtered.length){state.page+=1;applyFilters();document.getElementById("bookings").scrollIntoView()}});
 }
