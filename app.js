@@ -57,11 +57,15 @@ function render(pageTotal){
 function configureFilters(){
   els.courtOptions.innerHTML=`<label><input type="checkbox" data-all-courts checked> All courts</label>${Object.keys(courts).map(court=>`<label><input type="checkbox" data-court value="${court}"> ${court}</label>`).join("")}`;
   addOptions(els.categoryFilter,unique("category"));addOptions(els.typeFilter,unique("bookingType"));addOptions(els.membershipFilter,unique("membershipStatus"));addOptions(els.weekdayFilter,weekdays);
-  const dates=state.rows.map(row=>row.date).filter(Boolean).sort();if(dates.length){els.startDate.min=dates[0];els.startDate.max=dates.at(-1);els.endDate.min=dates[0];els.endDate.max=dates.at(-1)}
 }
 
 function bindEvents(){
-  [els.searchInput,els.categoryFilter,els.startDate,els.endDate,els.weekdayFilter,els.periodFilter,els.typeFilter,els.membershipFilter].forEach(control=>control.addEventListener(control.tagName==="INPUT"?"input":"change",()=>{state.page=1;applyFilters()}));
+  els.searchInput.addEventListener("input",()=>{state.page=1;applyFilters()});
+  [els.categoryFilter,els.weekdayFilter,els.periodFilter,els.typeFilter,els.membershipFilter].forEach(control=>control.addEventListener("change",()=>{state.page=1;applyFilters()}));
+  [els.startDate,els.endDate].forEach(control=>{
+    control.addEventListener("input",()=>{state.page=1;applyFilters()});
+    control.addEventListener("change",()=>{state.page=1;applyFilters()});
+  });
   els.courtOptions.addEventListener("change",event=>{const all=els.courtOptions.querySelector("[data-all-courts]");const choices=[...els.courtOptions.querySelectorAll("[data-court]")];if(event.target===all){all.checked=true;choices.forEach(choice=>choice.checked=false)}if(event.target.matches("[data-court]")){all.checked=false;if(!choices.some(choice=>choice.checked))all.checked=true}updateCourtSummary();state.page=1;applyFilters()});
   els.clearFilters.addEventListener("click",()=>{[els.searchInput,els.categoryFilter,els.startDate,els.endDate,els.weekdayFilter,els.periodFilter,els.typeFilter,els.membershipFilter].forEach(control=>control.value="");els.courtOptions.querySelector("[data-all-courts]").checked=true;els.courtOptions.querySelectorAll("[data-court]").forEach(choice=>choice.checked=false);updateCourtSummary();state.page=1;applyFilters()});
   els.previousPage.addEventListener("click",()=>{if(state.page>1){state.page-=1;applyFilters();document.getElementById("bookings").scrollIntoView()}});
